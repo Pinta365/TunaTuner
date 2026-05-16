@@ -1,0 +1,3 @@
+/* Tailwind's base/preflight reset — the global baseline the layout relies on.
+   App-specific styling lives in tuna-tuner.css. */
+@import "tailwindcss";
