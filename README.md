@@ -1,4 +1,8 @@
-# 🐟 TunaTuner
+<p align="center">
+  <img src="static/favicon.svg" width="200" alt="TunaTuner logo" />
+</p>
+
+# TunaTuner
 
 A browser-based instrument tuner — meet **Finley the tuna**, who reacts live to
 your pitch. Built with [Fresh](https://fresh.deno.dev/) (Deno + Preact).
