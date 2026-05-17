@@ -25,6 +25,11 @@ export default define.page(function App({ Component }) {
           href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
+        <script
+          async
+          src="https://track.webpulseanalytics.com/client/6a09b1b305dcb6a4b77565e5"
+          type="module"
+        />
       </head>
       <body>
         <Component />
