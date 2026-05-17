@@ -17,8 +17,9 @@ const NOTE_NAMES = [
 const A4 = 440;
 
 // ── Smoothing knobs — tweak to taste against a reference tuner ──
-// EMA weight for each new reading: lower = smoother, but more lag.
-const SMOOTH_ALPHA = 0.2;
+// EMA time constant in ms: the smoother reaches ~63% of a change in this
+// time, independent of display refresh rate. Lower = snappier, higher = calmer.
+const SMOOTH_MS = 75;
 // A reading more than this many cents off the smoothed pitch is treated as a
 // new note (snap to it) rather than jitter to be averaged.
 const SNAP_CENTS = 60;
@@ -135,13 +136,17 @@ export async function start(
   let stopped = false;
 
   // Smoothing state: a 3-reading median rejects single-frame octave glitches,
-  // then an EMA eases out the remaining few-cent jitter. `smoothed` is 0 until
-  // a pitch is acquired; it resets whenever the signal drops.
+  // then a time-based EMA eases out the remaining few-cent jitter. `smoothed`
+  // is 0 until a pitch is acquired; it resets whenever the signal drops.
   let smoothed = 0;
+  let lastT = 0;
   const recent: number[] = [];
 
-  const loop = () => {
+  const loop = (now: number) => {
     if (stopped) return;
+    const dt = Math.min(100, lastT ? now - lastT : 16);
+    lastT = now;
+
     analyser.getFloatTimeDomainData(buf);
     const raw = autoCorrelate(buf, ctx.sampleRate, getThreshold());
 
@@ -160,13 +165,15 @@ export async function start(
       } else if (Math.abs(1200 * Math.log2(med / smoothed)) > SNAP_CENTS) {
         smoothed = med; // big jump (new note/string) — snap, don't glide
       } else {
-        smoothed += SMOOTH_ALPHA * (med - smoothed); // steady tone — ease jitter
+        // Time-based EMA weight: alpha = 1 - e^(-dt / tau).
+        const alpha = 1 - Math.exp(-dt / SMOOTH_MS);
+        smoothed += alpha * (med - smoothed);
       }
       cb({ freq: smoothed, note: freqToNote(smoothed) });
     }
     raf = requestAnimationFrame(loop);
   };
-  loop();
+  raf = requestAnimationFrame(loop);
   return function stop() {
     stopped = true;
     cancelAnimationFrame(raf);
