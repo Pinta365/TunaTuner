@@ -622,6 +622,41 @@ export default function TunaTuner(
     };
   }, [active, simEnabled]);
 
+  // Keep the phone screen awake while the tuner is open (Screen Wake Lock
+  // API). The lock drops whenever the page is hidden, so it is re-acquired
+  // when the page becomes visible again.
+  useEffect(() => {
+    const wakeLock = (navigator as unknown as {
+      wakeLock?: {
+        request(type: "screen"): Promise<{ release(): Promise<void> }>;
+      };
+    }).wakeLock;
+    if (!wakeLock) return; // unsupported
+
+    let sentinel: { release: () => Promise<void> } | null = null;
+    let released = false;
+
+    const acquire = () => {
+      if (document.visibilityState !== "visible") return;
+      wakeLock.request("screen").then((s) => {
+        if (released) {
+          s.release().catch(() => {});
+        } else {
+          sentinel?.release().catch(() => {});
+          sentinel = s;
+        }
+      }).catch(() => {}); // a refused request (battery saver etc.) is harmless
+    };
+
+    acquire();
+    document.addEventListener("visibilitychange", acquire);
+    return () => {
+      released = true;
+      document.removeEventListener("visibilitychange", acquire);
+      sentinel?.release().catch(() => {});
+    };
+  }, []);
+
   const freq = detected.freq ?? null;
   const hasSignal = freq != null && freq > 0;
 
