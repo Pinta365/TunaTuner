@@ -80,45 +80,142 @@ export interface GuitarString {
   octave: number;
 }
 
+export interface Tuning {
+  label: string;
+  strings: GuitarString[];
+}
+
 export interface Instrument {
   label: string;
-  strings: GuitarString[] | null;
+  tunings: Record<string, Tuning> | null;
 }
+
+export type NoteNotation = "flats" | "sharps";
 
 export const INSTRUMENTS: Record<string, Instrument> = {
   guitar: {
     label: "Guitar",
-    strings: [
-      { name: "E", octave: 2 },
-      { name: "A", octave: 2 },
-      { name: "D", octave: 3 },
-      { name: "G", octave: 3 },
-      { name: "B", octave: 3 },
-      { name: "E", octave: 4 },
-    ],
+    tunings: {
+      standard: {
+        label: "Standard",
+        strings: [
+          { name: "E", octave: 2 },
+          { name: "A", octave: 2 },
+          { name: "D", octave: 3 },
+          { name: "G", octave: 3 },
+          { name: "B", octave: 3 },
+          { name: "E", octave: 4 },
+        ],
+      },
+      drop_d: {
+        label: "Drop D",
+        strings: [
+          { name: "D", octave: 2 },
+          { name: "A", octave: 2 },
+          { name: "D", octave: 3 },
+          { name: "G", octave: 3 },
+          { name: "B", octave: 3 },
+          { name: "E", octave: 4 },
+        ],
+      },
+      half_step: {
+        label: "Half Step Down",
+        strings: [
+          { name: "E♭", octave: 2 },
+          { name: "A♭", octave: 2 },
+          { name: "D♭", octave: 3 },
+          { name: "G♭", octave: 3 },
+          { name: "B♭", octave: 3 },
+          { name: "E♭", octave: 4 },
+        ],
+      },
+      open_g: {
+        label: "Open G",
+        strings: [
+          { name: "D", octave: 2 },
+          { name: "G", octave: 2 },
+          { name: "D", octave: 3 },
+          { name: "G", octave: 3 },
+          { name: "B", octave: 3 },
+          { name: "D", octave: 4 },
+        ],
+      },
+    },
   },
   bass: {
     label: "Bass",
-    strings: [
-      { name: "E", octave: 1 },
-      { name: "A", octave: 1 },
-      { name: "D", octave: 2 },
-      { name: "G", octave: 2 },
-    ],
+    tunings: {
+      standard: {
+        label: "Standard",
+        strings: [
+          { name: "E", octave: 1 },
+          { name: "A", octave: 1 },
+          { name: "D", octave: 2 },
+          { name: "G", octave: 2 },
+        ],
+      },
+      drop_d: {
+        label: "Drop D",
+        strings: [
+          { name: "D", octave: 1 },
+          { name: "A", octave: 1 },
+          { name: "D", octave: 2 },
+          { name: "G", octave: 2 },
+        ],
+      },
+      half_step: {
+        label: "Half Step Down",
+        strings: [
+          { name: "E♭", octave: 1 },
+          { name: "A♭", octave: 1 },
+          { name: "D♭", octave: 2 },
+          { name: "G♭", octave: 2 },
+        ],
+      },
+    },
   },
   ukulele: {
     label: "Ukulele",
-    strings: [
-      { name: "G", octave: 4 },
-      { name: "C", octave: 4 },
-      { name: "E", octave: 4 },
-      { name: "A", octave: 4 },
-    ],
+    tunings: {
+      standard: {
+        label: "Standard",
+        strings: [
+          { name: "G", octave: 4 },
+          { name: "C", octave: 4 },
+          { name: "E", octave: 4 },
+          { name: "A", octave: 4 },
+        ],
+      },
+      low_g: {
+        label: "Low G",
+        strings: [
+          { name: "G", octave: 3 },
+          { name: "C", octave: 4 },
+          { name: "E", octave: 4 },
+          { name: "A", octave: 4 },
+        ],
+      },
+    },
   },
-  chromatic: { label: "Chromatic", strings: null },
+  chromatic: { label: "Chromatic", tunings: null },
 };
 
-export const NOTE_NAMES = [
+export const NOTE_NAMES_FLAT = [
+  "C",
+  "D♭",
+  "D",
+  "E♭",
+  "E",
+  "F",
+  "G♭",
+  "G",
+  "A♭",
+  "A",
+  "B♭",
+  "B",
+];
+
+export const NOTE_NAMES_SHARP = [
   "C",
   "C♯",
   "D",
@@ -133,8 +230,50 @@ export const NOTE_NAMES = [
   "B",
 ];
 
+// Default app notation is flats.
+export const NOTE_NAMES = NOTE_NAMES_FLAT;
+
+const NOTE_INDEX_BY_NAME: Record<string, number> = {
+  C: 0,
+  "C♯": 1,
+  "D♭": 1,
+  "C#": 1,
+  Db: 1,
+  D: 2,
+  "D♯": 3,
+  "E♭": 3,
+  "Eb": 3,
+  "D#": 3,
+  E: 4,
+  F: 5,
+  "F♯": 6,
+  "G♭": 6,
+  "Gb": 6,
+  "F#": 6,
+  G: 7,
+  "G♯": 8,
+  "A♭": 8,
+  "Ab": 8,
+  "G#": 8,
+  A: 9,
+  "A♯": 10,
+  "B♭": 10,
+  "Bb": 10,
+  "A#": 10,
+  B: 11,
+};
+
+export const midiToNoteName = (
+  midi: number,
+  notation: NoteNotation = "flats",
+): string => {
+  const names = notation === "sharps" ? NOTE_NAMES_SHARP : NOTE_NAMES_FLAT;
+  return names[((midi % 12) + 12) % 12];
+};
+
 export const stringMidi = (s: GuitarString): number =>
-  NOTE_NAMES.indexOf(s.name) + (s.octave + 1) * 12;
+  (NOTE_INDEX_BY_NAME[s.name] ?? NOTE_NAMES.indexOf(s.name)) +
+  (s.octave + 1) * 12;
 
 export const noteToFreq = (midi: number): number =>
   440 * Math.pow(2, (midi - 69) / 12);

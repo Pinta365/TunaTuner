@@ -54,6 +54,10 @@ Both are loaded via imports in `client.ts`, not `<link>` tags.
 - **Mic-first.** "Drop Anchor" starts the real microphone. The "Simulate" slider
   (`DevSim`) is a dev tool, gated on `import.meta.env.DEV` — it is stripped from
   production builds entirely.
+- **Notation display is user-selectable.** The header toggle switches displayed
+  note names between flats and sharps; pitch math is unchanged. Use
+  `midiToNoteName()` in `lib/theme.ts` for UI labels so pinned strings, detected
+  notes, and presets stay consistent.
 - The noise-gate slider feeds `pitch.ts` through a ref-polled getter (`gateRef`)
   so dragging it adjusts sensitivity live without tearing down and restarting
   the mic stream.

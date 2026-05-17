@@ -108,6 +108,41 @@ body {
 .tt-tackle {
   position: relative;
 }
+.tt-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tt-notation {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 11px;
+  border: 1px solid var(--tt-panel-border, rgba(255, 255, 255, 0.12));
+  background: rgba(255, 255, 255, 0.03);
+}
+.tt-notation-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: rgba(220, 238, 255, 0.75);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+.tt-notation-btn:hover {
+  color: #fff;
+}
+.tt-notation-btn.is-active {
+  color: #fff;
+  background: rgba(34, 211, 238, 0.2);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.2);
+}
 .tt-tackle-btn {
   display: flex;
   align-items: center;
@@ -161,6 +196,23 @@ body {
 .tt-tackle-menu button.is-active {
   background: rgba(255, 255, 255, 0.06);
   font-weight: 600;
+  .tt-tackle-group-label {
+    display: block;
+    padding: 8px 14px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 4px;
+  }
+  .tt-tackle-group-label:first-child {
+    margin-top: 0;
+  }
+  .tt-tackle-menu button.tt-tune-sub {
+    padding-left: 24px;
+    font-size: 13px;
+  }
 }
 
 /* ─── String row ──────────────────────────────────────────────── */
@@ -884,6 +936,13 @@ body {
   }
   .tt-logo-text {
     font-size: 20px;
+  }
+  .tt-header-right {
+    gap: 6px;
+  }
+  .tt-notation-btn {
+    padding: 6px 8px;
+    font-size: 11px;
   }
 
   /* String row */

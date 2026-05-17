@@ -4,7 +4,8 @@ import Finley from "../components/Finley.tsx";
 import {
   type FinleyPalette,
   INSTRUMENTS,
-  NOTE_NAMES,
+  midiToNoteName,
+  type NoteNotation,
   noteToFreq,
   OCEAN,
   OCEAN_FINLEY,
@@ -70,10 +71,22 @@ function Bubbles({ active, color }: { active: boolean; color: string }) {
 
 // ─── Header ─────────────────────────────────────────────────────
 function Header(
-  { theme, instrumentKey, onInstrument }: {
+  {
+    theme,
+    instrumentKey,
+    tuning,
+    notation,
+    onNotation,
+    onInstrument,
+    onTuning,
+  }: {
     theme: Theme;
     instrumentKey: string;
+    tuning: string;
+    notation: NoteNotation;
+    onNotation: (notation: NoteNotation) => void;
     onInstrument: (k: string) => void;
+    onTuning: (t: string) => void;
   },
 ) {
   const [open, setOpen] = useState(false);
@@ -115,53 +128,109 @@ function Header(
           <span class="tt-logo-tag">with Finley the Tuna</span>
         </div>
       </div>
-      <div class="tt-tackle" ref={ref}>
-        <button
-          type="button"
-          class="tt-tackle-btn"
-          onClick={() => setOpen((o) => !o)}
-        >
-          <svg
-            viewBox="0 0 16 16"
-            width="14"
-            height="14"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.6"
+      <div class="tt-header-right">
+        <div class="tt-notation" role="radiogroup" aria-label="Note notation">
+          <button
+            type="button"
+            class={"tt-notation-btn " +
+              (notation === "flats" ? "is-active" : "")}
+            onClick={() => onNotation("flats")}
+            aria-pressed={notation === "flats"}
+            title="Show flats (E♭, A♭, B♭)"
           >
-            <rect x="2" y="5" width="12" height="9" rx="1.5" />
-            <path d="M 5 5 V 3 H 11 V 5" />
-            <path d="M 2 9 H 14" />
-          </svg>
-          <span>{inst.label}</span>
-          <svg
-            viewBox="0 0 12 12"
-            width="10"
-            height="10"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
+            Flats
+          </button>
+          <button
+            type="button"
+            class={"tt-notation-btn " +
+              (notation === "sharps" ? "is-active" : "")}
+            onClick={() => onNotation("sharps")}
+            aria-pressed={notation === "sharps"}
+            title="Show sharps (D♯, G♯, A♯)"
           >
-            <path d="M 3 4.5 L 6 7.5 L 9 4.5" />
-          </svg>
-        </button>
-        {open && (
-          <div class="tt-tackle-menu">
-            {Object.keys(INSTRUMENTS).map((k) => (
-              <button
-                type="button"
-                key={k}
-                class={k === instrumentKey ? "is-active" : ""}
-                onClick={() => {
-                  onInstrument(k);
-                  setOpen(false);
-                }}
-              >
-                {INSTRUMENTS[k].label}
-              </button>
-            ))}
-          </div>
-        )}
+            Sharps
+          </button>
+        </div>
+        <div class="tt-tackle" ref={ref}>
+          <button
+            type="button"
+            class="tt-tackle-btn"
+            onClick={() => setOpen((o) => !o)}
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+            >
+              <rect x="2" y="5" width="12" height="9" rx="1.5" />
+              <path d="M 5 5 V 3 H 11 V 5" />
+              <path d="M 2 9 H 14" />
+            </svg>
+            <span>{inst.label}</span>
+            <svg
+              viewBox="0 0 12 12"
+              width="10"
+              height="10"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path d="M 3 4.5 L 6 7.5 L 9 4.5" />
+            </svg>
+          </button>
+          {open && (
+            <div class="tt-tackle-menu">
+              {Object.keys(INSTRUMENTS).map((instKey) => {
+                const inst = INSTRUMENTS[instKey];
+                const isSelectedInst = instKey === instrumentKey;
+                const hasNoTunings = !inst.tunings;
+                if (hasNoTunings) {
+                  return (
+                    <button
+                      type="button"
+                      key={instKey}
+                      class={isSelectedInst ? "is-active" : ""}
+                      onClick={() => {
+                        onInstrument(instKey);
+                        setOpen(false);
+                      }}
+                    >
+                      {inst.label}
+                    </button>
+                  );
+                }
+                return (
+                  <div key={instKey}>
+                    <div class="tt-tackle-group-label">
+                      {inst.label}
+                    </div>
+                    {Object.keys(inst.tunings!).map((tuneKey) => {
+                      const tune = inst.tunings![tuneKey];
+                      const isSelected = isSelectedInst && tuning === tuneKey;
+                      return (
+                        <button
+                          type="button"
+                          key={`${instKey}-${tuneKey}`}
+                          class={isSelected ? "is-active" : "tt-tune-sub"}
+                          onClick={() => {
+                            onInstrument(instKey);
+                            onTuning(tuneKey);
+                            setOpen(false);
+                          }}
+                        >
+                          {tune.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
@@ -169,8 +238,18 @@ function Header(
 
 // ─── String picker row ──────────────────────────────────────────
 function StringRow(
-  { instrumentKey, currentMidi, pinnedMidi, onPin, theme }: {
+  {
+    instrumentKey,
+    tuning,
+    notation,
+    currentMidi,
+    pinnedMidi,
+    onPin,
+    theme,
+  }: {
     instrumentKey: string;
+    tuning: string;
+    notation: NoteNotation;
     currentMidi: number | null;
     pinnedMidi: number | null;
     onPin: (midi: number | null) => void;
@@ -178,12 +257,13 @@ function StringRow(
   },
 ) {
   const inst = INSTRUMENTS[instrumentKey];
-  if (!inst.strings) return null;
+  if (!inst.tunings || !inst.tunings[tuning]) return null;
+  const strings = inst.tunings[tuning].strings;
   // Closest string.
   let closest = -1;
   if (pinnedMidi == null && currentMidi != null) {
     let best = 1e9;
-    inst.strings.forEach((s, i) => {
+    strings.forEach((s, i) => {
       const d = Math.abs(stringMidi(s) - currentMidi);
       if (d < best) {
         best = d;
@@ -193,8 +273,9 @@ function StringRow(
   }
   return (
     <div class="tt-strings">
-      {inst.strings.map((s, i) => {
+      {strings.map((s, i) => {
         const midi = stringMidi(s);
+        const displayName = midiToNoteName(midi, notation);
         const pinned = pinnedMidi === midi;
         const isClosest = !pinned && i === closest;
         return (
@@ -205,13 +286,13 @@ function StringRow(
               (pinned ? "is-pinned" : isClosest ? "is-active" : "")}
             onClick={() => onPin(pinned ? null : midi)}
             title={pinned
-              ? `Locked on ${s.name}${s.octave} — tap to release`
-              : `Lock onto ${s.name}${s.octave}`}
+              ? `Locked on ${displayName}${s.octave} — tap to release`
+              : `Lock onto ${displayName}${s.octave}`}
             style={pinned
               ? { borderColor: theme.stateNeutral, color: theme.stateNeutral }
               : undefined}
           >
-            <span class="tt-string-note">{s.name}</span>
+            <span class="tt-string-note">{displayName}</span>
             <span class="tt-string-oct">{s.octave}</span>
           </button>
         );
@@ -555,6 +636,15 @@ export default function TunaTuner(
 
   const [simEnabled, setSimEnabled] = useState(false);
   const [sim, setSim] = useState(0);
+  const [notation, setNotation] = useState<NoteNotation>("flats");
+
+  const [tuning, setTuning] = useState("standard");
+
+  // Reset tuning to standard when instrument changes
+  const handleInstrumentChange = (key: string) => {
+    setInstrument(key);
+    setTuning("standard");
+  };
 
   const [pinnedMidi, setPinnedMidi] = useState<number | null>(null);
 
@@ -571,11 +661,12 @@ export default function TunaTuner(
   const targetMidi = useMemo(() => {
     if (pinnedMidi != null) return pinnedMidi;
     const inst = INSTRUMENTS[instrument];
-    if (inst.strings) {
-      return stringMidi(inst.strings[Math.floor(inst.strings.length / 2)]);
+    if (inst.tunings && inst.tunings[tuning]) {
+      const strings = inst.tunings[tuning].strings;
+      return stringMidi(strings[Math.floor(strings.length / 2)]);
     }
     return 69; // A4 for chromatic
-  }, [instrument, pinnedMidi]);
+  }, [instrument, tuning, pinnedMidi]);
 
   useEffect(() => {
     if (simEnabled) {
@@ -584,7 +675,7 @@ export default function TunaTuner(
       setDetected({
         freq: simFreq,
         note: {
-          name: NOTE_NAMES[((targetMidi % 12) + 12) % 12],
+          name: midiToNoteName(targetMidi),
           octave: Math.floor(targetMidi / 12) - 1,
           cents: sim,
           freqTarget: targetFreq,
@@ -673,14 +764,16 @@ export default function TunaTuner(
   let currentMidi: number | null;
   let cents: number;
   if (pinnedMidi != null) {
-    noteName = NOTE_NAMES[((pinnedMidi % 12) + 12) % 12];
+    noteName = midiToNoteName(pinnedMidi, notation);
     octave = Math.floor(pinnedMidi / 12) - 1;
     currentMidi = pinnedMidi;
     cents = freq != null && freq > 0
       ? 1200 * Math.log2(freq / noteToFreq(pinnedMidi))
       : 0;
   } else {
-    noteName = detected.note?.name ?? null;
+    noteName = detected.note?.midi != null
+      ? midiToNoteName(detected.note.midi, notation)
+      : null;
     octave = detected.note?.octave ?? null;
     currentMidi = detected.note?.midi ?? null;
     cents = detected.note ? detected.note.cents : 0;
@@ -732,13 +825,19 @@ export default function TunaTuner(
       <Header
         theme={theme}
         instrumentKey={instrument}
+        tuning={tuning}
+        notation={notation}
+        onNotation={setNotation}
         onInstrument={(k) => {
-          setInstrument(k);
+          handleInstrumentChange(k);
           setPinnedMidi(null);
         }}
+        onTuning={setTuning}
       />
       <StringRow
+        tuning={tuning}
         instrumentKey={instrument}
+        notation={notation}
         currentMidi={currentMidi}
         pinnedMidi={pinnedMidi}
         onPin={setPinnedMidi}

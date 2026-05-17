@@ -14,6 +14,7 @@ your pitch. Built with [Fresh](https://fresh.deno.dev/) (Deno + Preact).
 - Big note-name display with octave and live cents-deviation bar
 - Finley the tuna animates to the tuning state: flat, sharp, or in tune
 - Instrument presets: Guitar, Bass, Ukulele, Chromatic
+- Note-notation toggle: display note names as flats or sharps (same pitch)
 - Adjustable noise gate — "Filter Out The Seaweed"
 
 ## Develop
