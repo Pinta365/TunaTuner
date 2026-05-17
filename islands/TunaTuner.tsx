@@ -15,6 +15,11 @@ import { type Note, start as startPitch } from "../lib/pitch.ts";
 
 type Status = "idle" | "in-tune" | "sharp" | "flat";
 
+// In-tune hysteresis (cents): lock in below ENTER, but don't drop the lock
+// until past EXIT — the gap stops Finley flickering at the boundary.
+const IN_TUNE_ENTER = 5;
+const IN_TUNE_EXIT = 9;
+
 // ─── Bubbles particle field ─────────────────────────────────────
 interface BubbleSpec {
   id: number;
@@ -641,19 +646,23 @@ export default function TunaTuner(
     cents = detected.note ? detected.note.cents : 0;
   }
 
-  // In-tune detection: |cents| < 5 for >300ms = locked in.
+  // In-tune detection with hysteresis: held under ENTER for >300ms locks in;
+  // the lock only releases past EXIT. Between the two, the current state holds.
   const [inTune, setInTune] = useState(false);
   useEffect(() => {
     if (!hasSignal) {
       setInTune(false);
       return;
     }
-    if (Math.abs(cents) < 5) {
+    const dev = Math.abs(cents);
+    if (dev < IN_TUNE_ENTER) {
       const t = setTimeout(() => setInTune(true), 320);
       return () => clearTimeout(t);
-    } else {
+    }
+    if (dev > IN_TUNE_EXIT) {
       setInTune(false);
     }
+    // Between ENTER and EXIT: hysteresis band — leave the lock as-is.
   }, [cents, hasSignal]);
 
   const status: Status = !hasSignal

@@ -16,6 +16,13 @@ const NOTE_NAMES = [
 ];
 const A4 = 440;
 
+// ── Smoothing knobs — tweak to taste against a reference tuner ──
+// EMA weight for each new reading: lower = smoother, but more lag.
+const SMOOTH_ALPHA = 0.2;
+// A reading more than this many cents off the smoothed pitch is treated as a
+// new note (snap to it) rather than jitter to be averaged.
+const SNAP_CENTS = 60;
+
 export interface Note {
   name: string;
   octave: number;
@@ -99,8 +106,10 @@ function autoCorrelate(
   return freq;
 }
 
-// Start mic capture. cb({ freq, note }) at ~30fps. `getThreshold` is polled
-// each frame for the live RMS noise gate. Returns a stop() fn.
+// Start mic capture. The detect loop runs once per animation frame (display refresh rate);
+// `getThreshold` is polled each frame for the live RMS noise gate. The
+// reported frequency is median- + EMA-smoothed so a steady tone reads steady.
+// Returns a stop() fn.
 export async function start(
   cb: (result: PitchResult) => void,
   getThreshold: () => number = () => 0.01,
@@ -124,13 +133,37 @@ export async function start(
   const buf = new Float32Array(analyser.fftSize);
   let raf = 0;
   let stopped = false;
+
+  // Smoothing state: a 3-reading median rejects single-frame octave glitches,
+  // then an EMA eases out the remaining few-cent jitter. `smoothed` is 0 until
+  // a pitch is acquired; it resets whenever the signal drops.
+  let smoothed = 0;
+  const recent: number[] = [];
+
   const loop = () => {
     if (stopped) return;
     analyser.getFloatTimeDomainData(buf);
-    const freq = autoCorrelate(buf, ctx.sampleRate, getThreshold());
-    cb(
-      freq > 0 ? { freq, note: freqToNote(freq) } : { freq: -1, note: null },
-    );
+    const raw = autoCorrelate(buf, ctx.sampleRate, getThreshold());
+
+    if (raw <= 0) {
+      smoothed = 0;
+      recent.length = 0;
+      cb({ freq: -1, note: null });
+    } else {
+      recent.push(raw);
+      if (recent.length > 3) recent.shift();
+      const sorted = [...recent].sort((a, b) => a - b);
+      const med = sorted[sorted.length >> 1];
+
+      if (smoothed <= 0) {
+        smoothed = med; // first reading — acquire instantly
+      } else if (Math.abs(1200 * Math.log2(med / smoothed)) > SNAP_CENTS) {
+        smoothed = med; // big jump (new note/string) — snap, don't glide
+      } else {
+        smoothed += SMOOTH_ALPHA * (med - smoothed); // steady tone — ease jitter
+      }
+      cb({ freq: smoothed, note: freqToNote(smoothed) });
+    }
     raf = requestAnimationFrame(loop);
   };
   loop();
