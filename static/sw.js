@@ -5,7 +5,7 @@
 //     are immutable per content hash or rarely change.
 // Once visited online the tuner works fully offline. Registered only in
 // production builds by client.ts. Bump CACHE to force-retire stale caches.
-const CACHE = "tunatuner-v1";
+const CACHE = "tunatuner-v2";
 
 // How long to wait for the live page before falling back to the cached copy.
 const NAV_TIMEOUT_MS = 5000;
