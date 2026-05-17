@@ -164,17 +164,19 @@ function Header(
 
 // ─── String picker row ──────────────────────────────────────────
 function StringRow(
-  { instrumentKey, currentMidi, theme }: {
+  { instrumentKey, currentMidi, pinnedMidi, onPin, theme }: {
     instrumentKey: string;
     currentMidi: number | null;
+    pinnedMidi: number | null;
+    onPin: (midi: number | null) => void;
     theme: Theme;
   },
 ) {
   const inst = INSTRUMENTS[instrumentKey];
   if (!inst.strings) return null;
-  // Find closest string to current midi.
+  // Closest string.
   let closest = -1;
-  if (currentMidi != null) {
+  if (pinnedMidi == null && currentMidi != null) {
     let best = 1e9;
     inst.strings.forEach((s, i) => {
       const d = Math.abs(stringMidi(s) - currentMidi);
@@ -187,18 +189,26 @@ function StringRow(
   return (
     <div class="tt-strings">
       {inst.strings.map((s, i) => {
-        const active = i === closest;
+        const midi = stringMidi(s);
+        const pinned = pinnedMidi === midi;
+        const isClosest = !pinned && i === closest;
         return (
-          <div
+          <button
+            type="button"
             key={i}
-            class={"tt-string " + (active ? "is-active" : "")}
-            style={active
-              ? { borderColor: theme.stateNeutral, color: theme.text }
+            class={"tt-string " +
+              (pinned ? "is-pinned" : isClosest ? "is-active" : "")}
+            onClick={() => onPin(pinned ? null : midi)}
+            title={pinned
+              ? `Locked on ${s.name}${s.octave} — tap to release`
+              : `Lock onto ${s.name}${s.octave}`}
+            style={pinned
+              ? { borderColor: theme.stateNeutral, color: theme.stateNeutral }
               : undefined}
           >
             <span class="tt-string-note">{s.name}</span>
             <span class="tt-string-oct">{s.octave}</span>
-          </div>
+          </button>
         );
       })}
     </div>
@@ -281,8 +291,8 @@ function AquariumView(
           }}
         >
           <span class="tt-cents-bubble-val" style={{ color: barColor }}>
-            {Math.round(fill) > 0 ? "+" : ""}
-            {Math.round(fill)}
+            {Math.round(cents) > 0 ? "+" : ""}
+            {Math.round(cents)}
           </span>
         </div>
         <div class="tt-cents-label" style={{ left: "0%" }}>flat</div>
@@ -536,6 +546,8 @@ export default function TunaTuner(
   const [simEnabled, setSimEnabled] = useState(false);
   const [sim, setSim] = useState(0);
 
+  const [pinnedMidi, setPinnedMidi] = useState<number | null>(null);
+
   const gateRef = useRef(gate);
   useEffect(() => {
     gateRef.current = gate;
@@ -547,12 +559,13 @@ export default function TunaTuner(
   const stopRef = useRef<(() => void) | null>(null);
 
   const targetMidi = useMemo(() => {
+    if (pinnedMidi != null) return pinnedMidi;
     const inst = INSTRUMENTS[instrument];
     if (inst.strings) {
       return stringMidi(inst.strings[Math.floor(inst.strings.length / 2)]);
     }
     return 69; // A4 for chromatic
-  }, [instrument]);
+  }, [instrument, pinnedMidi]);
 
   useEffect(() => {
     if (simEnabled) {
@@ -604,16 +617,34 @@ export default function TunaTuner(
     };
   }, [active, simEnabled]);
 
-  const cents = detected.note ? detected.note.cents : 0;
-  const noteName = detected.note?.name ?? null;
-  const octave = detected.note?.octave ?? null;
   const freq = detected.freq ?? null;
-  const currentMidi = detected.note?.midi ?? null;
+  const hasSignal = freq != null && freq > 0;
+
+  // A pinned string overrides auto-detection: cents are measured against that
+  // exact tone, so the deviation is unbounded — anything above it reads sharp,
+  // anything below reads flat — instead of snapping to the nearest note.
+  let noteName: string | null;
+  let octave: number | null;
+  let currentMidi: number | null;
+  let cents: number;
+  if (pinnedMidi != null) {
+    noteName = NOTE_NAMES[((pinnedMidi % 12) + 12) % 12];
+    octave = Math.floor(pinnedMidi / 12) - 1;
+    currentMidi = pinnedMidi;
+    cents = freq != null && freq > 0
+      ? 1200 * Math.log2(freq / noteToFreq(pinnedMidi))
+      : 0;
+  } else {
+    noteName = detected.note?.name ?? null;
+    octave = detected.note?.octave ?? null;
+    currentMidi = detected.note?.midi ?? null;
+    cents = detected.note ? detected.note.cents : 0;
+  }
 
   // In-tune detection: |cents| < 5 for >300ms = locked in.
   const [inTune, setInTune] = useState(false);
   useEffect(() => {
-    if (!noteName) {
+    if (!hasSignal) {
       setInTune(false);
       return;
     }
@@ -623,9 +654,9 @@ export default function TunaTuner(
     } else {
       setInTune(false);
     }
-  }, [cents, noteName]);
+  }, [cents, hasSignal]);
 
-  const status: Status = !noteName
+  const status: Status = !hasSignal
     ? "idle"
     : inTune
     ? "in-tune"
@@ -652,11 +683,16 @@ export default function TunaTuner(
       <Header
         theme={theme}
         instrumentKey={instrument}
-        onInstrument={setInstrument}
+        onInstrument={(k) => {
+          setInstrument(k);
+          setPinnedMidi(null);
+        }}
       />
       <StringRow
         instrumentKey={instrument}
         currentMidi={currentMidi}
+        pinnedMidi={pinnedMidi}
+        onPin={setPinnedMidi}
         theme={theme}
       />
       <AquariumView
