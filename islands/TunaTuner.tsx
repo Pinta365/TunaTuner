@@ -360,7 +360,9 @@ function AquariumView(
                   ? `${Math.round(cents)}¢ flat`
                   : status === "sharp"
                   ? `+${Math.round(cents)}¢ sharp`
-                  : "Finley's listening…"}
+                  : active
+                  ? "Finley's listening…"
+                  : "Drop anchor to start tuning"}
               </div>
             </>
           )}
@@ -446,7 +448,10 @@ function ControlBar(
               </svg>
             )}
         </span>
-        <span class="tt-anchor-label">
+        <span
+          class="tt-anchor-label"
+          style={{ color: active ? "#ff8080" : "inherit" }}
+        >
           {active
             ? "Drop Anchor — Finley's Listening"
             : "Drop Anchor · Tune with Finley"}
