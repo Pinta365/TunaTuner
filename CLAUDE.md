@@ -64,9 +64,11 @@ Both are loaded via imports in `client.ts`, not `<link>` tags.
 - z-index only works on positioned elements; the design's CSS has several
   `static` elements with inert `z-index` — `.tt-header` needs an explicit
   `position` for the Tackle Box dropdown to layer above the aquarium.
-- PWA: `static/sw.js` is a runtime cache-first service worker, registered from
-  `client.ts` only in production (`import.meta.env.PROD`) so it never fights
-  Vite's dev HMR. It runs in ServiceWorkerGlobalScope (not Deno), so it is
-  excluded from `deno` tooling in `deno.json`; bump its `CACHE` constant when
-  editing it. The `static/icon-*.png` / `apple-touch-icon.png` icons are
-  generated from `favicon.svg`.
+- PWA: `static/sw.js` is the service worker — network-first (with a timeout) for
+  page navigations, cache-first for sub-resources. Registered from `client.ts`
+  only in production (`import.meta.env.PROD`) so it never fights Vite's dev HMR.
+  It runs in ServiceWorkerGlobalScope (not Deno), so it is excluded from `deno`
+  tooling in `deno.json`. Editing the SW logic does not need a `CACHE` bump —
+  only bump `CACHE` to force-evict the existing cache (a hard reset). The
+  `static/icon-*.png` / `apple-touch-icon.png` icons are generated from
+  `favicon.svg`.
