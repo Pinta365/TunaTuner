@@ -859,6 +859,18 @@ body {
   transform-origin: center;
 }
 
+/* Dizzy spiral — slowly spins for the woozy mic-error eye. */
+@keyframes finleyDizzy {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.finley-dizzy {
+  animation: finleyDizzy 1.6s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
 /* ─── Responsive — phones & narrow windows ────────────────────── */
 @media (max-width: 640px) {
   .tt-shell {

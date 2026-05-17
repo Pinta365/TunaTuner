@@ -8,6 +8,7 @@ export interface FinleyPalette {
   fin: string;
   accent: string;
   eye: string;
+  outline: string;
 }
 
 export interface Theme {
@@ -71,6 +72,7 @@ export const OCEAN_FINLEY: FinleyPalette = {
   fin: "#2a8fd6",
   accent: "#fbbf24",
   eye: "#0b1e33",
+  outline: "#05182b",
 };
 
 export interface GuitarString {
