@@ -5,11 +5,13 @@ interface FinleyProps {
   cents?: number;
   active?: boolean;
   inTune?: boolean;
+  error?: boolean;
   palette?: FinleyPalette;
 }
 
 export default function Finley(
-  { cents = 0, active = false, inTune = false, palette }: FinleyProps,
+  { cents = 0, active = false, inTune = false, error = false, palette }:
+    FinleyProps,
 ) {
   const p = palette || OCEAN_FINLEY;
   const t = Math.max(-1, Math.min(1, cents / 50));
@@ -36,8 +38,10 @@ export default function Finley(
     ? "finley-shake"
     : "finley-bob";
 
-  // Mouth
-  const mouthState = inTune
+  // Mouth — frown when the mic failed, otherwise driven by tuning state.
+  const mouthState = error
+    ? "frown"
+    : inTune
     ? "grin"
     : sharp
     ? "open"

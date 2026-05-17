@@ -217,6 +217,7 @@ function AquariumView(
     finleyPalette,
     active,
     inTune,
+    micError,
   }: {
     noteName: string | null;
     octave: number | null;
@@ -227,6 +228,7 @@ function AquariumView(
     finleyPalette: FinleyPalette;
     active: boolean;
     inTune: boolean;
+    micError: string | null;
   },
 ) {
   // status color for accent text
@@ -291,30 +293,62 @@ function AquariumView(
 
       {/* Note display */}
       <div class="tt-note-stack">
-        <div
-          class="tt-note-name"
-          style={{
-            color: statusColor,
-            textShadow: `0 0 60px ${statusColor}77, 0 0 120px ${statusColor}44`,
-          }}
-        >
-          {
-            /* Non-breaking space when idle: holds the line height so the
+        {micError
+          ? (
+            <div class="tt-mic-alert" role="alert">
+              <svg
+                class="tt-mic-alert-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={theme.stateSharp}
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="9" y="3" width="6" height="11" rx="3" />
+                <path d="M 5 11 a 7 7 0 0 0 14 0" />
+                <path d="M 12 18 v 3" />
+                <path d="M 8 21 h 8" />
+                <path d="M 3 3 L 21 21" />
+              </svg>
+              <div
+                class="tt-mic-alert-title"
+                style={{ color: theme.stateSharp }}
+              >
+                Finley can't hear you
+              </div>
+              <div class="tt-mic-alert-msg">{micError}</div>
+            </div>
+          )
+          : (
+            <>
+              <div
+                class="tt-note-name"
+                style={{
+                  color: statusColor,
+                  textShadow:
+                    `0 0 60px ${statusColor}77, 0 0 120px ${statusColor}44`,
+                }}
+              >
+                {
+                  /* Non-breaking space when idle: holds the line height so the
               layout doesn't jump when a real note appears, without the
               em-dash rendering as a glowing box. */
-          }
-          {noteName ?? " "}
-          {noteName && <sup class="tt-note-oct">{octave}</sup>}
-        </div>
-        <div class="tt-note-status" style={{ color: statusColor }}>
-          {status === "in-tune"
-            ? "IN TUNE"
-            : status === "flat"
-            ? `${Math.round(cents)}¢ flat`
-            : status === "sharp"
-            ? `+${Math.round(cents)}¢ sharp`
-            : "Finley's listening…"}
-        </div>
+                }
+                {noteName ?? " "}
+                {noteName && <sup class="tt-note-oct">{octave}</sup>}
+              </div>
+              <div class="tt-note-status" style={{ color: statusColor }}>
+                {status === "in-tune"
+                  ? "IN TUNE"
+                  : status === "flat"
+                  ? `${Math.round(cents)}¢ flat`
+                  : status === "sharp"
+                  ? `+${Math.round(cents)}¢ sharp`
+                  : "Finley's listening…"}
+              </div>
+            </>
+          )}
       </div>
 
       {/* Finley */}
@@ -324,6 +358,7 @@ function AquariumView(
             cents={cents}
             active={active}
             inTune={inTune}
+            error={!!micError}
             palette={finleyPalette}
           />
         </svg>
@@ -342,13 +377,12 @@ function AquariumView(
 
 // ─── Bottom control bar ─────────────────────────────────────────
 function ControlBar(
-  { active, onToggle, gate, onGate, theme, micError }: {
+  { active, onToggle, gate, onGate, theme }: {
     active: boolean;
     onToggle: () => void;
     gate: number;
     onGate: (v: number) => void;
     theme: Theme;
-    micError: string | null;
   },
 ) {
   const gatePct = Math.round(gate * 100);
@@ -436,7 +470,6 @@ function ControlBar(
           Noise gate — higher = quieter strings ignored
         </div>
       </div>
-      {micError && <div class="tt-mic-err">{micError}</div>}
     </div>
   );
 }
@@ -556,7 +589,9 @@ export default function TunaTuner(
         stopRef.current = stop;
         setMicError(null);
       } catch (_e) {
-        setMicError("Mic unavailable — check browser permissions.");
+        setMicError(
+          "Allow microphone access in your browser, then drop anchor again.",
+        );
         setActive(false);
       }
     })();
@@ -634,6 +669,7 @@ export default function TunaTuner(
         finleyPalette={finleyPalette}
         active={active || simEnabled}
         inTune={inTune}
+        micError={micError}
       />
       <ControlBar
         active={active}
@@ -641,7 +677,6 @@ export default function TunaTuner(
         gate={gate}
         onGate={setGate}
         theme={theme}
-        micError={micError}
       />
       {/* Dev-only: rendered under `deno task dev`, stripped from prod builds. */}
       {import.meta.env.DEV && (
