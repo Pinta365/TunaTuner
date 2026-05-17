@@ -1,12 +1,122 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#0c1f3a" />
-  <g transform="translate(3 5.5) scale(0.93)">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b2549" />
+      <stop offset="100%" stop-color="#07162b" />
+    </linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f4e86" />
+      <stop offset="55%" stop-color="#1777bd" />
+      <stop offset="100%" stop-color="#1f9bd8" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="220" fill="url(#bg)" />
+
+  <g transform="translate(112 286) scale(2.25)">
+    <g>
+      <path
+        d="M 70 120 L 18 78 L 30 120 L 18 162 Z"
+        fill="#0f4e86"
+        stroke="#0d3761"
+        stroke-width="3"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M 70 120 L 28 92 L 38 120 L 28 148 Z"
+        fill="#2f9ed4"
+        opacity="0.9"
+      />
+    </g>
+
     <path
-      d="M 28 12 C 28 6, 18 4, 12 8 L 6 12 L 12 16 C 18 20, 28 18, 28 12 Z"
-      fill="#22d3ee"
+      d="M 195 165 Q 220 188 248 168 Q 232 162 215 162 Z"
+      fill="#0f4e86"
+      stroke="#0d3761"
+      stroke-width="3"
+      stroke-linejoin="round"
     />
-    <path d="M 6 12 L 0 6 L 2 12 L 0 18 Z" fill="#22d3ee" opacity="0.85" />
-    <circle cx="24" cy="10" r="1.7" fill="#fff" />
-    <circle cx="24" cy="10" r="0.9" fill="#0c1f3a" />
+    <path
+      d="M 205 78 Q 235 50 258 72 Q 240 74 222 78 Z"
+      fill="#0f4e86"
+      stroke="#0d3761"
+      stroke-width="3"
+      stroke-linejoin="round"
+    />
+
+    <path
+      d="M 352 120
+         C 348 70, 250 62, 188 76
+         C 122 88, 90 104, 70 118
+         L 60 120
+         L 70 122
+         C 90 136, 122 152, 188 164
+         C 250 178, 348 170, 352 120
+         Z"
+      fill="url(#body)"
+      stroke="#0d3761"
+      stroke-width="3"
+      stroke-linejoin="round"
+    />
+
+    <path
+      d="M 90 122 C 150 124, 240 124, 270 122"
+      stroke="#0d3761"
+      stroke-width="2"
+      fill="none"
+      opacity="0.4"
+    />
+
+    <g
+      fill="#ffd54f"
+      stroke="#0d3761"
+      stroke-width="1.2"
+      stroke-linejoin="round"
+      opacity="0.98"
+    >
+      <path d="M 100 102 L 105 96 L 110 104 Z" />
+      <path d="M 115 100 L 120 94 L 125 102 Z" />
+      <path d="M 100 140 L 105 146 L 110 138 Z" />
+      <path d="M 115 142 L 120 148 L 125 140 Z" />
+    </g>
+
+    <path
+      d="M 282 95 Q 274 120 282 148"
+      stroke="#0d3761"
+      stroke-width="3"
+      stroke-linecap="round"
+      fill="none"
+      opacity="0.72"
+    />
+
+    <path
+      d="M 250 138 Q 268 168 290 152 Q 278 142 262 138 Z"
+      fill="#2f9ed4"
+      stroke="#0d3761"
+      stroke-width="3"
+      stroke-linejoin="round"
+    />
+
+    <ellipse cx="313" cy="108" rx="15" ry="16" fill="#0f4e86" opacity="0.35" />
+    <ellipse
+      cx="313"
+      cy="108"
+      rx="13"
+      ry="13"
+      fill="#ffffff"
+      stroke="#0d3761"
+      stroke-width="2"
+    />
+    <ellipse cx="315" cy="108" rx="6" ry="6" fill="#082445" />
+    <circle cx="317" cy="105" r="2.3" fill="#ffffff" />
+
+    <path
+      d="M 319 129 Q 332 138 345 129"
+      stroke="#0d3761"
+      stroke-width="3"
+      fill="none"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
   </g>
 </svg>
